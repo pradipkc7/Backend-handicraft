@@ -5,11 +5,11 @@ import cors from "cors";
 
 // routes
 import userRoutes from "./routes/user.route.ts";
-import adminRoutes from "./routes/admin/user.route.ts";
+// import adminRoutes from "./routes/admin/user.route.ts";
 
 const app: Application = express();
 const corsOptions = {
-  origin: ["*"], // ["http://localhost:3000", "http://example.com"]
+  origin: ["*"],
   successStatus: 200,
 };
 app.use(cors(corsOptions)); // enable CORS for all routes
@@ -42,7 +42,7 @@ app.get("/api/v1/auth", (_req: Request, res: Response) => {
 
 app.use("/api/v1/auth", userRoutes); // user related routes
 app.use("/api/v1/users", userRoutes); // compatibility alias for user routes
-app.use("/api/v1/admin", adminRoutes); // admin routes
+// app.use("/api/v1/admin", adminRoutes); // admin routes
 
 // global api handler (at the last)
 app.use((req: Request, res: Response) => {

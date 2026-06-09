@@ -1,14 +1,15 @@
-import { AdmimUserController } from "../../controllers/admin/user.controller";
-import { Router } from "express";
-import { authorizedMiddleware } from "../../middlewares/authorized.middleware";
+// import { AdmimUserController } from "../../controllers/admin/user.controller";
+// import { Router } from "express";
+// import { authorizedMiddleware } from "../../middlewares/authorized.middleware";
 
-const adminUserRouter = Router();
-const adminController = new AdmimUserController();
+// const adminUserRouter = Router();
+// const adminController = new AdmimUserController();
 
-adminUserRouter.post(
-  "/create",
-  authorizedMiddleware,
-  adminController.createUser,
-);
+// adminUserRouter.post(
+//   "/create",
+//   authorizedMiddleware,
+//   adminController.createUser,
+// );
 
-export default adminUserRouter;
+// export default adminUserRouter;
+// //
