@@ -1,8 +1,13 @@
 import { UserMongoRepository } from "../repositories/user.repository";
-import { CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
+import {
+  CreateUserDTO,
+  LoginUserDTO,
+  UpdateUserDto,
+  ChangePasswordDto,
+} from "../dtos/user.dto";
 import { IUser } from "../models/user.model";
 import { HttpException } from "../exceptions/http-exception";
-import bycryptjs from "bcryptjs";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { SECRET_KEY } from "../config/constant";
 
@@ -22,7 +27,7 @@ export class UserService {
       throw new HttpException(400, "Username already exists");
     }
     // hash password
-    const hashedPassword = await bycryptjs.hash(userData.password, 10);
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
     userData.password = hashedPassword;
     const user = await userRepository.createUser(userData);
     return user;
@@ -33,7 +38,7 @@ export class UserService {
     if (!user) {
       throw new HttpException(400, "Invalid email");
     }
-    const isPasswordValid = await bycryptjs.compare(
+    const isPasswordValid = await bcrypt.compare(
       loginData.password, // client password
       user.password, // database password
     );
@@ -46,5 +51,57 @@ export class UserService {
       { expiresIn: "30d" },
     );
     return { user, token };
+  }
+  async updateUser(id: string, updateData: UpdateUserDto) {
+    const user = await userRepository.getUserById(id);
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
+    if (updateData.email && updateData.email !== user.email) {
+      const existingUserByEmail = await userRepository.getUserByEmail(
+        updateData.email,
+      );
+      if (existingUserByEmail) {
+        throw new HttpException(400, "Email already exists");
+      }
+    }
+    if (updateData.username && updateData.username !== user.username) {
+      const existingUserByUsername = await userRepository.getUserByUsername(
+        updateData.username,
+      );
+      if (existingUserByUsername) {
+        throw new HttpException(400, "Username already exists");
+      }
+    }
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
+    const updatedUser = await userRepository.update(id, updateData);
+    return updatedUser;
+  }
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+  ) {
+    const user = await userRepository.getUserById(userId);
+
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
+
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isPasswordValid) {
+      throw new HttpException(400, "Old password is incorrect");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const updatedUser = await userRepository.update(userId, {
+      password: hashedPassword,
+    } as any);
+
+    return updatedUser;
   }
 }
