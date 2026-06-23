@@ -16,6 +16,7 @@ const UserMongoSchema: Schema = new Schema<IUser>(
     password: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     gender: { type: String, enum: ["male", "female", "other"], required: true },
+    imageUrl: { type: String, default: "" },
   },
   {
     timestamps: true, // createdAt and updatedAt will be automatically added and managed by mongoose

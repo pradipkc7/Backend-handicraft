@@ -1,9 +1,10 @@
-import { UserService } from "../services/user.service.ts";
-import { HttpException } from "../exceptions/http-exception.ts";
+import { UserService } from "../services/user.service";
+import { HttpException } from "../exceptions/http-exception";
 import { z } from "zod";
-import * as UserDto from "../dtos/user.dto.ts";
+import * as UserDto from "../dtos/user.dto";
 import { ApiResponseHelper } from "../utils/apihelper.util.ts";
 import { Request, Response } from "express";
+import { ChangePasswordDto } from "../dtos/user.dto";
 
 const userService = new UserService();
 
@@ -17,7 +18,6 @@ export class UserController {
       const createdUser = await userService.createUser(parseResult.data);
       return ApiResponseHelper.success(res, createdUser, "User created", 201);
     } catch (e: Error | unknown | any) {
-      console.error("Create user error:", e);
       return ApiResponseHelper.error(
         res,
         e?.message || "Failed to create user",
@@ -43,6 +43,77 @@ export class UserController {
       return ApiResponseHelper.error(
         res,
         e?.message || "Failed to create user",
+        e.status || 500,
+      );
+    }
+  }
+  async whoami(req: Request, res: Response) {
+    try {
+      const user = req.user;
+      if (!user) {
+        return ApiResponseHelper.error(res, "User not found", 404);
+      }
+      return ApiResponseHelper.success(
+        res,
+        user,
+        "User details fetched successfully",
+      );
+    } catch (error: Error | any | unknown) {
+      return ApiResponseHelper.error(
+        res,
+        error.message || "Internal Server Error",
+        error.status || 500,
+      );
+    }
+  }
+  async changePassword(req: Request, res: Response) {
+    try {
+      const parseResult = ChangePasswordDto.safeParse(req.body);
+
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+
+      const userId = (req.user as any)._id || (req.user as any).id;
+
+      const user = await userService.changePassword(
+        userId.toString(),
+        parseResult.data.oldPassword,
+        parseResult.data.newPassword,
+      );
+
+      return ApiResponseHelper.success(
+        res,
+        user,
+
+        "Password updated successfully",
+      );
+    } catch (e: any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to update password",
+        e?.status || 500,
+      );
+    }
+  }
+  async updateUser(req: Request, res: Response) {
+    try {
+      const userId = req.user?._id;
+      const filename = req.file?.filename;
+      const parseResult = UserDto.UpdateUserDto.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      const updateData = {
+        ...parseResult.data,
+        ...(filename && { imageUrl: "/uploads/" + filename }),
+      };
+      const updatedUser = await userService.updateUser(userId, updateData);
+      return ApiResponseHelper.success(res, updatedUser, "User updated");
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to update user",
         e.status || 500,
       );
     }

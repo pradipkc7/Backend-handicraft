@@ -1,46 +1,29 @@
 import express, { Application, NextFunction, Request, Response } from "express";
-import { HttpException } from "./exceptions/http-exception.ts";
-import { ApiResponseHelper } from "./utils/apihelper.util.ts";
+import { HttpException } from "./exceptions/http-exception";
+import { ApiResponseHelper } from "./utils/apihelper.util";
 import cors from "cors";
+import path from "path";
+import morgan from "morgan";
+import uploadRoutes from "./routes/upload.route";
 
 // routes
-import userRoutes from "./routes/user.route.ts";
-// import adminRoutes from "./routes/admin/user.route.ts";
+import userRoutes from "./routes/user.route";
 
 const app: Application = express();
-const corsOptions = {
+let corsOptions = {
   origin: ["*"],
   successStatus: 200,
 };
+// impl path
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"))); // static file serving in uploads folder
+
+// impl routes
+app.use("/api/v1/file", uploadRoutes); // file upload routes
 app.use(cors(corsOptions)); // enable CORS for all routes
 
 app.use(express.json()); // json input
 app.use(express.urlencoded({ extended: true })); // x-www-form-urlencoded
-
-app.get("/", (_req: Request, res: Response) => {
-  return res.status(200).json({ message: "Backend API is running" });
-});
-
-app.get("/api/v1", (_req: Request, res: Response) => {
-  return res.status(200).json({
-    message: "API is running",
-    endpoints: [
-      "/api/v1/auth/register",
-      "/api/v1/auth/login",
-      "/api/v1/users/register",
-      "/api/v1/users/login",
-    ],
-  });
-});
-
-app.get("/api/v1/auth", (_req: Request, res: Response) => {
-  return res.status(200).json({
-    message: "Auth routes available",
-    endpoints: ["/api/v1/auth/register", "/api/v1/auth/login"],
-  });
-});
-
-app.use("/api/v1/auth", userRoutes); // user related routes
+app.use(morgan("combined"));
 app.use("/api/v1/users", userRoutes); // compatibility alias for user routes
 // app.use("/api/v1/admin", adminRoutes); // admin routes
 
