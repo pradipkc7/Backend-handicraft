@@ -21,4 +21,10 @@ userRouter.get(
 
   userController.whoami,
 );
+userRouter.patch(
+  "/change-password",
+  authorizedMiddleware,
+  userController.changePassword,
+);
+
 export default userRouter;
