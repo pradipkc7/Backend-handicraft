@@ -8,6 +8,7 @@ import uploadRoutes from "./routes/upload.route";
 
 // routes
 import userRoutes from "./routes/user.route";
+import adminUserRoutes from "./routes/admin/user.route";
 
 const app: Application = express();
 let corsOptions = {
@@ -25,7 +26,9 @@ app.use(express.json()); // json input
 app.use(express.urlencoded({ extended: true })); // x-www-form-urlencoded
 app.use(morgan("combined"));
 app.use("/api/v1/users", userRoutes); // compatibility alias for user routes
-// app.use("/api/v1/admin", adminRoutes); // admin routes
+// admin routes
+app.use("/api/v1/admin/users", adminUserRoutes); // admin user related routes
+
 
 // global api handler (at the last)
 app.use((req: Request, res: Response) => {

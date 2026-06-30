@@ -9,13 +9,41 @@ export const LoginUserDTO = UserSchema.pick({
   email: true,
   password: true,
 });
+export const CreateUserDTOAdmin = UserSchema.pick({
+  firstName: true,
+  lastName: true,
+  email: true,
+  username: true,
+  password: true,
+  phoneNumber: true,
+  gender: true,
+  role: true,
+});
+export type CreateUserDTOAdmin = z.infer<typeof CreateUserDTOAdmin>;
 
 export type LoginUserDTO = z.infer<typeof LoginUserDTO>;
-export const UpdateUserDto = UserSchema.partial();
-export type UpdateUserDto = z.infer<typeof UpdateUserDto>;
-export const ChangePasswordDto = z.object({
+export const UpdateUserDTO = UserSchema.partial();
+export type UpdateUserDTO = z.infer<typeof UpdateUserDTO>;
+export const ChangePasswordDTO = z.object({
   oldPassword: z.string().min(6),
   newPassword: z.string().min(6),
 });
 
-export type ChangePasswordDto = z.infer<typeof ChangePasswordDto>;
+export type ChangePasswordDTO = z.infer<typeof ChangePasswordDTO>;
+export const UpdatePasswordDTO = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(6, "Current password must be at least 6 characters long"),
+    newPassword: z
+      .string()
+      .min(6, "New password must be at least 6 characters long"),
+    confirmPassword: z
+      .string()
+      .min(6, "Confirm password must be at least 6 characters long"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "New password and confirm password must match",
+    path: ["confirmPassword"],
+  });
+export type UpdatePasswordDTO = z.infer<typeof UpdatePasswordDTO>;

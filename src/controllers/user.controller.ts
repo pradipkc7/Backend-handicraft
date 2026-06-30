@@ -4,7 +4,7 @@ import { z } from "zod";
 import * as UserDto from "../dtos/user.dto";
 import { ApiResponseHelper } from "../utils/apihelper.util.ts";
 import { Request, Response } from "express";
-import { ChangePasswordDto } from "../dtos/user.dto";
+import { ChangePasswordDTO } from "../dtos/user.dto";
 
 const userService = new UserService();
 
@@ -68,7 +68,7 @@ export class UserController {
   }
   async changePassword(req: Request, res: Response) {
     try {
-      const parseResult = ChangePasswordDto.safeParse(req.body);
+      const parseResult = ChangePasswordDTO.safeParse(req.body);
 
       if (!parseResult.success) {
         throw new HttpException(400, z.prettifyError(parseResult.error));
@@ -100,7 +100,7 @@ export class UserController {
     try {
       const userId = req.user?._id;
       const filename = req.file?.filename;
-      const parseResult = UserDto.UpdateUserDto.safeParse(req.body);
+      const parseResult = UserDto.UpdateUserDTO.safeParse(req.body);
       if (!parseResult.success) {
         throw new HttpException(400, z.prettifyError(parseResult.error));
       }
