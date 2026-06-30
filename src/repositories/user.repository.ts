@@ -39,4 +39,22 @@ export class UserMongoRepository implements IUserRepository {
     const deleted = await UserModel.findByIdAndDelete(id);
     return !!deleted;
   }
+  async getAllPaginated(
+    page: number,
+    limit: number,
+    search?: string,
+  ): Promise<{ data: IUser[]; total: number }> {
+    const query: any = {};
+    if (search) {
+      query.$or = [
+        { username: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+    const total = await UserModel.countDocuments(query);
+    const data = await UserModel.find(query)
+      .skip((page - 1) * limit)
+      .limit(limit);
+    return { data, total };
+  }
 }

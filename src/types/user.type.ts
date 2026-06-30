@@ -15,6 +15,7 @@ export const UserSchema = z.object({
     .max(15, "Phone number cannot exceed 15 digits"),
 
   gender: z.enum(["male", "female", "other"]),
+  role: z.enum(["admin", "user"]).default("user"),
   // imageUrl: z.string(),
   imageUrl: z.string().nullable().optional(),
 });
