@@ -9,6 +9,8 @@ import uploadRoutes from "./routes/upload.route";
 // routes
 import userRoutes from "./routes/user.route";
 import adminUserRoutes from "./routes/admin/user.route";
+import adminProductRoutes from "./routes/admin/product.route";
+import productRoutes from "./routes/product.route";
 
 const app: Application = express();
 let corsOptions = {
@@ -26,9 +28,10 @@ app.use(express.json()); // json input
 app.use(express.urlencoded({ extended: true })); // x-www-form-urlencoded
 app.use(morgan("combined"));
 app.use("/api/v1/users", userRoutes); // compatibility alias for user routes
+app.use("/api/v1/products", productRoutes); // public handicraft product catalog routes for app and website
 // admin routes
 app.use("/api/v1/admin/users", adminUserRoutes); // admin user related routes
-
+app.use("/api/v1/admin/products", adminProductRoutes); // admin product management routes
 
 // global api handler (at the last)
 app.use((req: Request, res: Response) => {
