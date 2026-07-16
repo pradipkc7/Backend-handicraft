@@ -16,8 +16,8 @@ export const KHALTI_RETURN_URL: string =
 export const KHALTI_WEBSITE_URL: string =
   process.env.KHALTI_WEBSITE_URL || "http://localhost:8088";
 
-// Anthropic Claude API (for the chatbot)
-export const ANTHROPIC_API_KEY: string = process.env.ANTHROPIC_API_KEY || "";
+// Google Gemini API (for the chatbot)
+export const GEMINI_API_KEY: string = process.env.GEMINI_API_KEY || "";
 
 // Email (for forgot-password reset codes)
 export const EMAIL_USER: string = process.env.EMAIL_USER || "";

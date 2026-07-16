@@ -8,6 +8,8 @@ const userController = new UserController();
 
 userRouter.post("/register", userController.createUser);
 userRouter.post("/login", userController.loginUser);
+userRouter.post("/forgot-password", userController.forgotPassword);
+userRouter.post("/reset-password", userController.resetPassword);
 
 userRouter.put(
   "/update",

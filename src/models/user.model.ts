@@ -4,6 +4,8 @@ import { UserType } from "../types/user.type";
 export interface IUser extends UserType, Document {
   // can add mongo related attr
   _id: mongoose.Types.ObjectId;
+  resetPasswordCode?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +20,8 @@ const UserMongoSchema: Schema = new Schema<IUser>(
     gender: { type: String, enum: ["male", "female", "other"], required: true },
      role: { type: String, enum: ["admin", "user"], default: "user" },
     imageUrl: { type: String, default: "" },
+    resetPasswordCode: { type: String, required: false, select: false },
+    resetPasswordExpires: { type: Date, required: false, select: false },
   },
   {
     timestamps: true, // createdAt and updatedAt will be automatically added and managed by mongoose

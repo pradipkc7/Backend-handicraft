@@ -47,3 +47,17 @@ export const UpdatePasswordDTO = z
     path: ["confirmPassword"],
   });
 export type UpdatePasswordDTO = z.infer<typeof UpdatePasswordDTO>;
+
+export const ForgotPasswordDTO = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+export type ForgotPasswordDTO = z.infer<typeof ForgotPasswordDTO>;
+
+export const ResetPasswordDTO = z.object({
+  email: z.string().email("Invalid email address"),
+  code: z.string().length(6, "Code must be 6 digits"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters long"),
+});
+
+export type ResetPasswordDTO = z.infer<typeof ResetPasswordDTO>;

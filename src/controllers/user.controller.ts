@@ -96,6 +96,49 @@ export class UserController {
       );
     }
   }
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const parseResult = UserDto.ForgotPasswordDTO.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      await userService.forgotPassword(parseResult.data.email);
+      return ApiResponseHelper.success(
+        res,
+        null,
+        "If that email exists, a reset code has been sent",
+        200,
+      );
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to process forgot password request",
+        e.status || 500,
+      );
+    }
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const parseResult = UserDto.ResetPasswordDTO.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      await userService.resetPassword(
+        parseResult.data.email,
+        parseResult.data.code,
+        parseResult.data.newPassword,
+      );
+      return ApiResponseHelper.success(res, null, "Password reset successful", 200);
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to reset password",
+        e.status || 500,
+      );
+    }
+  }
+
   async updateUser(req: Request, res: Response) {
     try {
       const userId = req.user?._id;

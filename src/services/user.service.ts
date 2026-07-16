@@ -9,9 +9,14 @@ import { IUser } from "../models/user.model";
 import { HttpException } from "../exceptions/http-exception";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { SECRET_KEY } from "../config/constant";
+import { MailService } from "./mail.service";
 
 const userRepository = new UserMongoRepository();
+const mailService = new MailService();
+
+const RESET_CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 export class UserService {
   async createUser(userData: CreateUserDTO): Promise<IUser> {
@@ -157,5 +162,48 @@ export class UserService {
       throw new HttpException(404, "User not found");
     }
     return user;
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await userRepository.getUserByEmail(email);
+    // Don't reveal whether the email exists — respond the same either way
+    if (!user) {
+      return;
+    }
+
+    const code = crypto.randomInt(100000, 1000000).toString();
+    const hashedCode = await bcrypt.hash(code, 10);
+
+    await userRepository.update(user._id.toString(), {
+      resetPasswordCode: hashedCode,
+      resetPasswordExpires: new Date(Date.now() + RESET_CODE_TTL_MS),
+    } as Partial<IUser>);
+
+    await mailService.sendResetCode(user.email, code);
+  }
+
+  async resetPassword(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await userRepository.getUserByEmailWithResetFields(email);
+    if (!user || !user.resetPasswordCode || !user.resetPasswordExpires) {
+      throw new HttpException(400, "Invalid or expired reset code");
+    }
+    if (user.resetPasswordExpires.getTime() < Date.now()) {
+      throw new HttpException(400, "Reset code has expired");
+    }
+
+    const isCodeValid = await bcrypt.compare(code, user.resetPasswordCode);
+    if (!isCodeValid) {
+      throw new HttpException(400, "Invalid or expired reset code");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await userRepository.update(user._id.toString(), {
+      password: hashedPassword,
+    } as Partial<IUser>);
+    await userRepository.clearResetCode(user._id.toString());
   }
 }

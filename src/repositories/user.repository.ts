@@ -2,6 +2,8 @@ import { UserModel, IUser } from "../models/user.model";
 
 export interface IUserRepository {
   getUserByEmail(email: string): Promise<IUser | null>;
+  getUserByEmailWithResetFields(email: string): Promise<IUser | null>;
+  clearResetCode(id: string): Promise<void>;
   getUserByUsername(username: string): Promise<IUser | null>;
   // 5 common mandatory methods for a repository
   createUser(user: Partial<IUser>): Promise<IUser>;
@@ -18,6 +20,17 @@ export class UserMongoRepository implements IUserRepository {
   async getUserByEmail(email: string): Promise<IUser | null> {
     const found = await UserModel.findOne({ email });
     return found;
+  }
+  async getUserByEmailWithResetFields(email: string): Promise<IUser | null> {
+    const found = await UserModel.findOne({ email }).select(
+      "+resetPasswordCode +resetPasswordExpires",
+    );
+    return found;
+  }
+  async clearResetCode(id: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(id, {
+      $unset: { resetPasswordCode: "", resetPasswordExpires: "" },
+    });
   }
   async getUserByUsername(username: string): Promise<IUser | null> {
     const found = await UserModel.findOne({ username });
