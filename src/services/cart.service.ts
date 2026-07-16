@@ -14,12 +14,21 @@ export class CartService {
     return cartRepository.createCart(userId);
   }
 
+  // Unpopulated cart: items[].itemId is a raw ObjectId, safe to compare/filter.
+  private async getOrCreateRawCart(userId: string): Promise<ICart> {
+    const existing = await cartRepository.getRawCartByUserId(userId);
+    if (existing) {
+      return existing;
+    }
+    return cartRepository.createCart(userId);
+  }
+
   async getCart(userId: string): Promise<ICart> {
     return this.getOrCreateCart(userId);
   }
 
   async addItem(userId: string, data: AddCartItemDTO): Promise<ICart> {
-    const cart = await this.getOrCreateCart(userId);
+    const cart = await this.getOrCreateRawCart(userId);
     const existingItem = cart.items.find(
       (i) => i.itemId.toString() === data.itemId,
     );
@@ -41,7 +50,7 @@ export class CartService {
     itemId: string,
     data: UpdateCartItemDTO,
   ): Promise<ICart> {
-    const cart = await this.getOrCreateCart(userId);
+    const cart = await this.getOrCreateRawCart(userId);
     const existingItem = cart.items.find((i) => i.itemId.toString() === itemId);
     if (!existingItem) {
       throw new HttpException(404, "Item not found in cart");
@@ -53,7 +62,7 @@ export class CartService {
   }
 
   async removeItem(userId: string, itemId: string): Promise<ICart> {
-    const cart = await this.getOrCreateCart(userId);
+    const cart = await this.getOrCreateRawCart(userId);
     cart.items = cart.items.filter(
       (i) => i.itemId.toString() !== itemId,
     ) as ICart["items"];
@@ -63,9 +72,10 @@ export class CartService {
   }
 
   async clearCart(userId: string): Promise<ICart> {
-    const cart = await this.getOrCreateCart(userId);
+    const cart = await this.getOrCreateRawCart(userId);
     cart.items = [] as unknown as ICart["items"];
     await cartRepository.save(cart);
-    return cart;
+    const populated = await cartRepository.getCartByUserId(userId);
+    return populated as ICart;
   }
 }

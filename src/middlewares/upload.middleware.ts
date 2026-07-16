@@ -57,3 +57,27 @@ export const uploads = {
     }[],
   ) => upload.fields(fieldsArray),
 };
+
+export const uploadPhoto = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new HttpException(400, "Only image files are allowed"));
+    }
+  },
+});
+
+export const uploadVideo = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("video/")) {
+      cb(null, true);
+    } else {
+      cb(new HttpException(400, "Only video files are allowed"));
+    }
+  },
+});
