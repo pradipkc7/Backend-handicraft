@@ -15,6 +15,7 @@ import categoryRoutes from "./routes/category.route";
 import itemRoutes from "./routes/item.route";
 import cartRoutes from "./routes/cart.route";
 import orderRoutes from "./routes/order.route";
+import addressRoutes from "./routes/address.route";
 import chatbotRoutes from "./routes/chatbot.route";
 import contactRoutes from "./routes/contact.route";
 
@@ -45,6 +46,7 @@ app.get("/api/v1", (_req: Request, res: Response) => {
       "/api/v1/items",
       "/api/v1/cart",
       "/api/v1/orders",
+      "/api/v1/addresses",
       "/api/v1/chatbot",
       "/api/v1/contact",
       "/api/v1/file",
@@ -60,6 +62,7 @@ app.use("/api/v1/categories", categoryRoutes); // category related routes
 app.use("/api/v1/items", itemRoutes); // item related routes
 app.use("/api/v1/cart", cartRoutes); // cart related routes
 app.use("/api/v1/orders", orderRoutes); // order + khalti payment routes
+app.use("/api/v1/addresses", addressRoutes); // saved shipping address routes
 app.use("/api/v1/chatbot", chatbotRoutes); // AI chatbot routes
 app.use("/api/v1/contact", contactRoutes); // contact form -> emails the shop inbox
 // admin routes
