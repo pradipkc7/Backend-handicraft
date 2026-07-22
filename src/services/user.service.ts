@@ -35,11 +35,15 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     userData.password = hashedPassword;
     const user = await userRepository.createUser(userData);
-    return user;
+    const safeUser = user.toObject();
+    delete safeUser.password;
+    return safeUser as IUser;
   }
 
   async loginUser(loginData: LoginUserDTO) {
-    const user = await userRepository.getUserByEmail(loginData.email);
+    const user = await userRepository.getUserByEmailWithPassword(
+      loginData.email,
+    );
     if (!user) {
       throw new HttpException(400, "Invalid email");
     }
@@ -55,7 +59,9 @@ export class UserService {
       SECRET_KEY,
       { expiresIn: "30d" },
     );
-    return { user, token };
+    const safeUser = user.toObject();
+    delete safeUser.password;
+    return { user: safeUser, token };
   }
   async updateUser(id: string, updateData: UpdateUserDTO) {
     const user = await userRepository.getUserById(id);
@@ -89,7 +95,7 @@ export class UserService {
     oldPassword: string,
     newPassword: string,
   ) {
-    const user = await userRepository.getUserById(userId);
+    const user = await userRepository.getUserByIdWithPassword(userId);
 
     if (!user) {
       throw new HttpException(404, "User not found");
@@ -124,7 +130,7 @@ export class UserService {
     userId: string,
     currentPassword: string,
   ): Promise<boolean> {
-    const user = await userRepository.getUserById(userId);
+    const user = await userRepository.getUserByIdWithPassword(userId);
     if (!user) {
       throw new HttpException(404, "User not found");
     }

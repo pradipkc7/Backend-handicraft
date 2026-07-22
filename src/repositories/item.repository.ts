@@ -10,6 +10,7 @@ export interface IItemRepository {
   getAll(): Promise<IItem[]>;
   update(id: string, item: Partial<IItem>): Promise<IItem | null>;
   delete(id: string): Promise<boolean>;
+  adjustStock(id: string, delta: number): Promise<IItem | null>;
 }
 
 export class ItemMongoRepository implements IItemRepository {
@@ -46,5 +47,16 @@ export class ItemMongoRepository implements IItemRepository {
   async delete(id: string): Promise<boolean> {
     const deleted = await ItemModel.findByIdAndDelete(id);
     return !!deleted;
+  }
+  async adjustStock(id: string, delta: number): Promise<IItem | null> {
+    const filter: Record<string, unknown> = { _id: id };
+    if (delta < 0) {
+      filter.quantity = { $gte: -delta };
+    }
+    return ItemModel.findOneAndUpdate(
+      filter,
+      { $inc: { quantity: delta } },
+      { new: true },
+    );
   }
 }
