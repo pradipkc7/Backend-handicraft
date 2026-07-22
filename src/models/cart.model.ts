@@ -15,7 +15,7 @@ export interface ICart extends Document {
 
 const CartItemSchema = new Schema<ICartItem>(
   {
-    itemId: { type: Schema.Types.ObjectId, ref: "Item", required: true },
+    itemId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     quantity: { type: Number, required: true, min: 1 },
   },
   { _id: false },

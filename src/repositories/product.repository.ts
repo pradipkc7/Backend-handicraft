@@ -7,6 +7,7 @@ export interface IProductRepository {
   getAll(): Promise<IProduct[]>;
   update(id: string, product: Partial<IProduct>): Promise<IProduct | null>;
   delete(id: string): Promise<boolean>;
+  adjustStock(id: string, delta: number): Promise<IProduct | null>;
   getAllPaginated(
     page: number,
     limit: number,
@@ -44,6 +45,18 @@ export class ProductMongoRepository implements IProductRepository {
   async delete(id: string): Promise<boolean> {
     const deleted = await ProductModel.findByIdAndDelete(id);
     return !!deleted;
+  }
+
+  async adjustStock(id: string, delta: number): Promise<IProduct | null> {
+    const filter: Record<string, unknown> = { _id: id };
+    if (delta < 0) {
+      filter.stock = { $gte: -delta };
+    }
+    return ProductModel.findOneAndUpdate(
+      filter,
+      { $inc: { stock: delta } },
+      { new: true },
+    );
   }
 
   async getAllPaginated(

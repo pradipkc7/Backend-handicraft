@@ -24,6 +24,8 @@ const ProductMongoSchema: Schema = new Schema<IProduct>(
     artisanName: { type: String, trim: true },
     location: { type: String, trim: true },
     tags: { type: [String], default: [] },
+    rating: { type: Number, required: false, default: 0, min: 0, max: 5 },
+    totalReviews: { type: Number, required: false, default: 0 },
   },
   {
     timestamps: true,

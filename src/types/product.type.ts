@@ -23,6 +23,8 @@ export const ProductSchema = z.object({
   artisanName: z.string().optional(),
   location: z.string().optional(),
   tags: z.array(z.string()).optional().default([]),
+  rating: z.coerce.number().min(0).max(5).optional().default(0),
+  totalReviews: z.coerce.number().min(0).optional().default(0),
 });
 
 export type ProductType = z.infer<typeof ProductSchema>;
