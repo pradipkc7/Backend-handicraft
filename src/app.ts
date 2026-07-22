@@ -16,18 +16,20 @@ import itemRoutes from "./routes/item.route";
 import cartRoutes from "./routes/cart.route";
 import orderRoutes from "./routes/order.route";
 import chatbotRoutes from "./routes/chatbot.route";
+import contactRoutes from "./routes/contact.route";
 
 const app: Application = express();
 let corsOptions = {
-  origin: ["*"],
+  origin: "*",
   successStatus: 200,
 };
 // impl path
 app.use("/uploads", express.static(path.join(__dirname, "../uploads"))); // static file serving in uploads folder
 
+app.use(cors(corsOptions)); // enable CORS for all routes
+
 // impl routes
 app.use("/api/v1/file", uploadRoutes); // file upload routes
-app.use(cors(corsOptions)); // enable CORS for all routes
 
 app.use(express.json()); // json input
 app.use(express.urlencoded({ extended: true })); // x-www-form-urlencoded
@@ -44,6 +46,7 @@ app.get("/api/v1", (_req: Request, res: Response) => {
       "/api/v1/cart",
       "/api/v1/orders",
       "/api/v1/chatbot",
+      "/api/v1/contact",
       "/api/v1/file",
       "/api/v1/admin/users",
       "/api/v1/admin/products",
@@ -58,6 +61,7 @@ app.use("/api/v1/items", itemRoutes); // item related routes
 app.use("/api/v1/cart", cartRoutes); // cart related routes
 app.use("/api/v1/orders", orderRoutes); // order + khalti payment routes
 app.use("/api/v1/chatbot", chatbotRoutes); // AI chatbot routes
+app.use("/api/v1/contact", contactRoutes); // contact form -> emails the shop inbox
 // admin routes
 app.use("/api/v1/admin/users", adminUserRoutes); // admin user related routes
 app.use("/api/v1/admin/products", adminProductRoutes); // admin product management routes

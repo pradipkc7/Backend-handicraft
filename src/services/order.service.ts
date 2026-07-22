@@ -1,6 +1,7 @@
 import { OrderMongoRepository } from "../repositories/order.repository";
 import { CartMongoRepository } from "../repositories/cart.repository";
 import { UserMongoRepository } from "../repositories/user.repository";
+import { ProductMongoRepository } from "../repositories/product.repository";
 import { KhaltiService } from "./khalti.service";
 import { CreateOrderDTO } from "../dtos/order.dto";
 import { IOrder, IOrderItem } from "../models/order.model";
@@ -9,6 +10,7 @@ import { HttpException } from "../exceptions/http-exception";
 const orderRepository = new OrderMongoRepository();
 const cartRepository = new CartMongoRepository();
 const userRepository = new UserMongoRepository();
+const productRepository = new ProductMongoRepository();
 const khaltiService = new KhaltiService();
 
 export class OrderService {
@@ -21,16 +23,38 @@ export class OrderService {
       throw new HttpException(400, "Cart is empty");
     }
 
-    const orderItems: IOrderItem[] = cart.items.map((cartItem) => {
-      const item = cartItem.itemId as any; // populated Item document
-      return {
+    // Validate availability before touching stock, so a shortfall on one
+    // item doesn't leave earlier items' stock decremented without an order.
+    for (const cartItem of cart.items) {
+      const item = cartItem.itemId as any; // populated Product document
+      if (!item) {
+        throw new HttpException(
+          400,
+          "One of the items in your cart is no longer available",
+        );
+      }
+      if (item.stock < cartItem.quantity) {
+        throw new HttpException(409, `${item.name} is out of stock`);
+      }
+    }
+
+    const orderItems: IOrderItem[] = [];
+    for (const cartItem of cart.items) {
+      const item = cartItem.itemId as any; // populated Product document
+      const updated = await productRepository.adjustStock(
+        item._id.toString(),
+        -cartItem.quantity,
+      );
+      if (!updated) {
+        throw new HttpException(409, `${item.name} is out of stock`);
+      }
+      orderItems.push({
         itemId: item._id,
-        sellerId: item.sellerId,
-        title: item.title,
-        price: item.price,
+        title: item.name,
+        price: item.discountPrice ?? item.price,
         quantity: cartItem.quantity,
-      };
-    });
+      });
+    }
 
     const totalAmount = orderItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -98,14 +122,18 @@ export class OrderService {
     return orderRepository.getOrdersByBuyer(buyerId);
   }
 
-  async getOrderById(id: string, userId: string): Promise<IOrder> {
+  async getOrderById(
+    id: string,
+    userId: string,
+    role?: string,
+  ): Promise<IOrder> {
     const order = await orderRepository.getOrderById(id);
     if (!order) {
       throw new HttpException(404, "Order not found");
     }
     const isBuyer = order.buyerId.toString() === userId;
-    const isSeller = order.items.some((i) => i.sellerId.toString() === userId);
-    if (!isBuyer && !isSeller) {
+    const isSeller = order.items.some((i) => i.sellerId?.toString() === userId);
+    if (!isBuyer && !isSeller && role !== "admin") {
       throw new HttpException(403, "You are not allowed to view this order");
     }
     return order;
@@ -115,13 +143,14 @@ export class OrderService {
     id: string,
     userId: string,
     status: IOrder["status"],
+    role?: string,
   ): Promise<IOrder> {
     const order = await orderRepository.getOrderById(id);
     if (!order) {
       throw new HttpException(404, "Order not found");
     }
-    const isSeller = order.items.some((i) => i.sellerId.toString() === userId);
-    if (!isSeller) {
+    const isSeller = order.items.some((i) => i.sellerId?.toString() === userId);
+    if (!isSeller && role !== "admin") {
       throw new HttpException(403, "You are not allowed to update this order");
     }
     const updated = await orderRepository.update(id, { status });

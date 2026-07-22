@@ -60,9 +60,11 @@ export class OrderController {
   async getOrderById(req: Request, res: Response) {
     try {
       const userId = (req.user as any)._id.toString();
+      const role = (req.user as any).role;
       const order = await orderService.getOrderById(
         req.params.id as string,
         userId,
+        role,
       );
       return ApiResponseHelper.success(res, order, "Order fetched", 200);
     } catch (e: Error | unknown | any) {
@@ -81,10 +83,12 @@ export class OrderController {
         throw new HttpException(400, z.prettifyError(parseResult.error));
       }
       const userId = (req.user as any)._id.toString();
+      const role = (req.user as any).role;
       const order = await orderService.updateStatus(
         req.params.id as string,
         userId,
         parseResult.data.status,
+        role,
       );
       return ApiResponseHelper.success(res, order, "Order status updated", 200);
     } catch (e: Error | unknown | any) {

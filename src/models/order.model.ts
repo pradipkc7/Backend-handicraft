@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IOrderItem {
   itemId: mongoose.Types.ObjectId;
-  sellerId: mongoose.Types.ObjectId;
+  sellerId?: mongoose.Types.ObjectId;
   title: string;
   price: number;
   quantity: number;
@@ -26,8 +26,8 @@ export interface IOrder extends Document {
 
 const OrderItemSchema = new Schema<IOrderItem>(
   {
-    itemId: { type: Schema.Types.ObjectId, ref: "Item", required: true },
-    sellerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    itemId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+    sellerId: { type: Schema.Types.ObjectId, ref: "User", required: false },
     title: { type: String, required: true },
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
