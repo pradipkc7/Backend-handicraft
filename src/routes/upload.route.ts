@@ -16,8 +16,12 @@ router.post("/upload", uploads.single("image"), (req, res) => {
 
       "File uploaded successfully",
     );
-  } catch (error) {
-    return ApiResponseHelper.error(res, error);
+  } catch (error: Error | any | unknown) {
+    return ApiResponseHelper.error(
+      res,
+      error?.message || "Failed to upload file",
+      error?.status || 500,
+    );
   }
 });
 
