@@ -1,7 +1,7 @@
 import { OrderMongoRepository } from "../repositories/order.repository";
 import { CartMongoRepository } from "../repositories/cart.repository";
 import { UserMongoRepository } from "../repositories/user.repository";
-import { ProductMongoRepository } from "../repositories/product.repository";
+import { ItemMongoRepository } from "../repositories/item.repository";
 import { KhaltiService } from "./khalti.service";
 import { CreateOrderDTO } from "../dtos/order.dto";
 import { IOrder, IOrderItem } from "../models/order.model";
@@ -10,7 +10,7 @@ import { HttpException } from "../exceptions/http-exception";
 const orderRepository = new OrderMongoRepository();
 const cartRepository = new CartMongoRepository();
 const userRepository = new UserMongoRepository();
-const productRepository = new ProductMongoRepository();
+const itemRepository = new ItemMongoRepository();
 const khaltiService = new KhaltiService();
 
 export class OrderService {
@@ -26,32 +26,33 @@ export class OrderService {
     // Validate availability before touching stock, so a shortfall on one
     // item doesn't leave earlier items' stock decremented without an order.
     for (const cartItem of cart.items) {
-      const item = cartItem.itemId as any; // populated Product document
+      const item = cartItem.itemId as any; // populated Item document
       if (!item) {
         throw new HttpException(
           400,
           "One of the items in your cart is no longer available",
         );
       }
-      if (item.stock < cartItem.quantity) {
-        throw new HttpException(409, `${item.name} is out of stock`);
+      if (item.quantity < cartItem.quantity) {
+        throw new HttpException(409, `${item.title} is out of stock`);
       }
     }
 
     const orderItems: IOrderItem[] = [];
     for (const cartItem of cart.items) {
-      const item = cartItem.itemId as any; // populated Product document
-      const updated = await productRepository.adjustStock(
+      const item = cartItem.itemId as any; // populated Item document
+      const updated = await itemRepository.adjustStock(
         item._id.toString(),
         -cartItem.quantity,
       );
       if (!updated) {
-        throw new HttpException(409, `${item.name} is out of stock`);
+        throw new HttpException(409, `${item.title} is out of stock`);
       }
       orderItems.push({
         itemId: item._id,
-        title: item.name,
-        price: item.discountPrice ?? item.price,
+        sellerId: item.sellerId,
+        title: item.title,
+        price: item.price,
         quantity: cartItem.quantity,
       });
     }
