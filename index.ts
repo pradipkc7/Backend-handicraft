@@ -1,5 +1,5 @@
 import app from "./src/app";
-import { PORT as SERVER_PORT } from "./src/config/constant";
+import { PORT } from "./src/config/constant";
 import { connectToMongoDB } from "./src/database/mongodb";
 
 connectToMongoDB()
@@ -11,6 +11,6 @@ connectToMongoDB()
     process.exit(1); // Exit the process with an error code
   });
 
-app.listen(SERVER_PORT, () => {
-  console.log(`Server Running:${SERVER_PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server Running:${PORT}`);
 });

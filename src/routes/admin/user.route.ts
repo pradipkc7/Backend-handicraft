@@ -1,15 +1,19 @@
-// import { AdmimUserController } from "../../controllers/admin/user.controller";
-// import { Router } from "express";
-// import { authorizedMiddleware } from "../../middlewares/authorized.middleware";
+import { Router } from "express";
+import { AdminUserController } from "../../controllers/admin/user.controller";
+import { authorizedMiddleware, adminMiddleware } from "../../middlewares/authorized.middleware";
+import { uploads } from "../../middlewares/upload.middleware";
 
-// const adminUserRouter = Router();
-// const adminController = new AdmimUserController();
+const router = Router();
+const adminUserController = new AdminUserController();
 
-// adminUserRouter.post(
-//   "/create",
-//   authorizedMiddleware,
-//   adminController.createUser,
-// );
+router.use(authorizedMiddleware, adminMiddleware);
 
-// export default adminUserRouter;
-// //
+// api endpoints for admin user management
+router.get("/", adminUserController.getAllUserPaginated);
+router.get("/:id", adminUserController.getUserById);
+router.post("/", adminUserController.createUser);
+router.put("/:id", uploads.single("profileImage"), adminUserController.updateUser); // multipart for image upload
+router.put("/:id/password", adminUserController.updatePassword);
+router.delete("/:id", adminUserController.deleteUser);
+
+export default router;

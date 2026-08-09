@@ -1,7 +1,11 @@
-import { UserModel, IUser } from "../models/user.model.js";
+import { UserModel, IUser } from "../models/user.model";
 
 export interface IUserRepository {
   getUserByEmail(email: string): Promise<IUser | null>;
+  getUserByEmailWithPassword(email: string): Promise<IUser | null>;
+  getUserByIdWithPassword(id: string): Promise<IUser | null>;
+  getUserByEmailWithResetFields(email: string): Promise<IUser | null>;
+  clearResetCode(id: string): Promise<void>;
   getUserByUsername(username: string): Promise<IUser | null>;
   // 5 common mandatory methods for a repository
   createUser(user: Partial<IUser>): Promise<IUser>;
@@ -18,6 +22,25 @@ export class UserMongoRepository implements IUserRepository {
   async getUserByEmail(email: string): Promise<IUser | null> {
     const found = await UserModel.findOne({ email });
     return found;
+  }
+  async getUserByEmailWithPassword(email: string): Promise<IUser | null> {
+    const found = await UserModel.findOne({ email }).select("+password");
+    return found;
+  }
+  async getUserByIdWithPassword(id: string): Promise<IUser | null> {
+    const found = await UserModel.findOne({ _id: id }).select("+password");
+    return found;
+  }
+  async getUserByEmailWithResetFields(email: string): Promise<IUser | null> {
+    const found = await UserModel.findOne({ email }).select(
+      "+resetPasswordCode +resetPasswordExpires",
+    );
+    return found;
+  }
+  async clearResetCode(id: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(id, {
+      $unset: { resetPasswordCode: "", resetPasswordExpires: "" },
+    });
   }
   async getUserByUsername(username: string): Promise<IUser | null> {
     const found = await UserModel.findOne({ username });
@@ -38,5 +61,23 @@ export class UserMongoRepository implements IUserRepository {
   async delete(id: string): Promise<boolean> {
     const deleted = await UserModel.findByIdAndDelete(id);
     return !!deleted;
+  }
+  async getAllPaginated(
+    page: number,
+    limit: number,
+    search?: string,
+  ): Promise<{ data: IUser[]; total: number }> {
+    const query: any = {};
+    if (search) {
+      query.$or = [
+        { username: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+    const total = await UserModel.countDocuments(query);
+    const data = await UserModel.find(query)
+      .skip((page - 1) * limit)
+      .limit(limit);
+    return { data, total };
   }
 }
